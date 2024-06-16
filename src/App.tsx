@@ -3,19 +3,8 @@ import './App.css'
 import ResponsiveChartContainer from './ResponsiveChartContainer'
 import { AgChartsReact } from 'ag-charts-react'
 import { useWindowSize } from '@uidotdev/usehooks'
-
-interface EntryType {
-  id: string
-  ping_time: number
-  gateway: {
-    latency?: number
-    ip: string
-  },
-  google: {
-    latency?: number
-    ip: string
-  }
-}
+import Metrics from './Metrics'
+import { EntryType } from './types/EntryType'
 
 enum TIMEFRAMES {
   MINUTE = 6,
@@ -108,19 +97,26 @@ function App() {
 
   return (
     <ResponsiveChartContainer>
-        {chartOptions ?
-          // @ts-expect-error want to try this
-          <AgChartsReact options={chartOptions} />
-          :
-          <p>Loading...</p>  
-        }
-        <div style={{ display: 'flex', flexDirection: width && width < 900 ? 'column' : 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
-          <button disabled={limit === TIMEFRAMES.MINUTE} onClick={() => setLimit(TIMEFRAMES.MINUTE)}>Last Minute</button>
-          <button disabled={limit === TIMEFRAMES.HOUR} onClick={() => setLimit(TIMEFRAMES.HOUR)}>Last Hour</button>
-          <button disabled={limit === TIMEFRAMES.DAY} onClick={() => setLimit(TIMEFRAMES.DAY)}>Last Day</button>
-          <button disabled={limit === TIMEFRAMES.WEEK} onClick={() => setLimit(TIMEFRAMES.WEEK)}>Last Week</button>
-          <button disabled={limit === TIMEFRAMES.MONTH} onClick={() => setLimit(TIMEFRAMES.MONTH)}>Last Month</button>
+      <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'row' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'row' }}>
+          <Metrics data={data}/>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            {chartOptions ?
+              // @ts-expect-error want to try this
+              <AgChartsReact options={chartOptions} />
+              :
+              <p>Loading...</p>  
+            }
+            <div style={{ display: 'flex', flexDirection: width && width < 900 ? 'column' : 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
+              <button disabled={limit === TIMEFRAMES.MINUTE} onClick={() => setLimit(TIMEFRAMES.MINUTE)}>Last Minute</button>
+              <button disabled={limit === TIMEFRAMES.HOUR} onClick={() => setLimit(TIMEFRAMES.HOUR)}>Last Hour</button>
+              <button disabled={limit === TIMEFRAMES.DAY} onClick={() => setLimit(TIMEFRAMES.DAY)}>Last Day</button>
+              <button disabled={limit === TIMEFRAMES.WEEK} onClick={() => setLimit(TIMEFRAMES.WEEK)}>Last Week</button>
+              <button disabled={limit === TIMEFRAMES.MONTH} onClick={() => setLimit(TIMEFRAMES.MONTH)}>Last Month</button>
+            </div>
+          </div>
         </div>
+      </div>
     </ResponsiveChartContainer>
   )
 }
