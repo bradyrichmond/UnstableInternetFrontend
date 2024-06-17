@@ -2,11 +2,11 @@ export interface EntryType {
     id: string
     ping_time: number
     gateway: {
-        latency?: number
+        latency: number
         ip: string
     },
     google: {
-        latency?: number
+        latency: number
         ip: string
     }
 }

@@ -7,24 +7,27 @@ import Metrics from './Metrics'
 import { EntryType } from './types/EntryType'
 
 enum TIMEFRAMES {
-  MINUTE = 6,
-  HOUR = 360,
-  DAY = 8640,
-  WEEK = 60480,
-  MONTH = 259200
+  MINUTE = 60000,
+  TENMINUTE = 600000,
+  HOUR = 3600000,
+  DAY = 8640000,
+  WEEK = 60480000,
+  MONTH = 262800000
 }
 
 function App() {
   const { width } = useWindowSize()
   const [data, setData] = useState<EntryType[]>([])
-  const [limit, setLimit] = useState<number>(TIMEFRAMES.HOUR)
+  const [timeframe, setTimeframe] = useState<number>(TIMEFRAMES.HOUR)
+  const [limit, setLimit] = useState<number>(TIMEFRAMES.HOUR / 10000)
 
   const getDataPoints = useCallback(async () => {
-    const response = await fetch(`https://kd741iv5pg.execute-api.us-west-2.amazonaws.com/main?pageSize=${limit}`)
+    const after = new Date().getTime() - timeframe
+    const response = await fetch(`https://kd741iv5pg.execute-api.us-west-2.amazonaws.com/main?timeframe=${after}&pageSize=${limit + 1}`)
     const fetchedData = await response.json()
 
     setData(fetchedData)
-  }, [limit])
+  }, [timeframe, limit])
 
   useEffect(() => {
     getDataPoints()
@@ -52,7 +55,7 @@ function App() {
           ip: e.google.ip
         }
       }
-    }).sort((a: EntryType, b: EntryType) => a.ping_time - b.ping_time)
+    }).sort((a, b) => a.ping_time - b.ping_time)
 
     return {
       title: { text: 'Latency from my home computer' },
@@ -95,11 +98,16 @@ function App() {
     }
   }, [data])
 
+  const updateFilter = (filter: TIMEFRAMES) => {
+    setTimeframe(filter)
+    setLimit(filter / 10000)
+  }
+
   return (
     <ResponsiveChartContainer>
       <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'row' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'row' }}>
-          <Metrics data={data}/>
+          {data.length > 0 && <Metrics data={data}/>}
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             {chartOptions ?
               // @ts-expect-error want to try this
@@ -108,11 +116,12 @@ function App() {
               <p>Loading...</p>  
             }
             <div style={{ display: 'flex', flexDirection: width && width < 900 ? 'column' : 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
-              <button disabled={limit === TIMEFRAMES.MINUTE} onClick={() => setLimit(TIMEFRAMES.MINUTE)}>Last Minute</button>
-              <button disabled={limit === TIMEFRAMES.HOUR} onClick={() => setLimit(TIMEFRAMES.HOUR)}>Last Hour</button>
-              <button disabled={limit === TIMEFRAMES.DAY} onClick={() => setLimit(TIMEFRAMES.DAY)}>Last Day</button>
-              <button disabled={limit === TIMEFRAMES.WEEK} onClick={() => setLimit(TIMEFRAMES.WEEK)}>Last Week</button>
-              <button disabled={limit === TIMEFRAMES.MONTH} onClick={() => setLimit(TIMEFRAMES.MONTH)}>Last Month</button>
+              <button disabled={timeframe === TIMEFRAMES.MINUTE} onClick={() => updateFilter(TIMEFRAMES.MINUTE)}>Last Minute</button>
+              <button disabled={timeframe === TIMEFRAMES.TENMINUTE} onClick={() => updateFilter(TIMEFRAMES.TENMINUTE)}>Last Ten Minutes</button>
+              <button disabled={timeframe === TIMEFRAMES.HOUR} onClick={() => updateFilter(TIMEFRAMES.HOUR)}>Last Hour</button>
+              <button disabled={timeframe === TIMEFRAMES.DAY} onClick={() => updateFilter(TIMEFRAMES.DAY)}>Last Day</button>
+              <button disabled={timeframe === TIMEFRAMES.WEEK} onClick={() => updateFilter(TIMEFRAMES.WEEK)}>Last Week</button>
+              <button disabled={timeframe === TIMEFRAMES.MONTH} onClick={() => updateFilter(TIMEFRAMES.MONTH)}>Last Month</button>
             </div>
           </div>
         </div>
